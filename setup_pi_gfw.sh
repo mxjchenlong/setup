@@ -1,15 +1,33 @@
 #!/bin/bash
 
-
-
-mkdir -p /etc/apt/sources.list.d/bk
-mv /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/bk
-echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian wheezy main contrib non-free rpi" > /etc/apt/sources.list
+DEBIAN_FRONTEND=noninteractive
+distro=$(uname -a|grep raspberrypi)
+if [ "" == "$distro" ]; then
+	echo "23.235.39.133 shadowsocks.org" >> /etc/hosts
+	echo "deb http://shadowsocks.org/debian wheezy main" > /etc/apt/sources.list.d/ss.list
+	echo "deb http://mirror.bit.edu.cn/ubuntu/ trusty main restricted universe multiverse" > /etc/apt/sources.list
+else
+	mkdir -p /etc/apt/sources.list.d/bk
+	mv /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/bk
+	echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian wheezy main contrib non-free rpi" > /etc/apt/sources.list
+fi
 
 apt-get update
-apt-get install dnsmasq haproxy vim curl wget sed openvpn pdnsd -y --force-yes
-wget http://192.168.168.240/software/linux/raspbian/dnsmasq -O /usr/sbin/dnsmasq
+apt-get install dnsmasq haproxy vim curl wget sed openvpn pdnsd ipset -y --force-yes
+
+if [ "" == "$distro" ]; then
+	sudo apt-get install  -y --force-yes shadowsocks-libev
+else
+	wget http://192.168.168.240/software/linux/raspbian/dnsmasq -O /usr/sbin/dnsmasq
+	wget http://192.168.168.240/software/linux/raspbian/shadowsocks-libev_2.2.3-1_armhf.deb -O /tmp/shadowsocks.deb
+	dpkg -i /tmp/shadowsocks.deb
+	rm -f /tmp/*.deb
+fi
+
+mkdir -p /etc/dnsmasq.d/
 wget http://192.168.168.240/software/linux/raspbian/dnsmasq_list.conf -O /etc/dnsmasq.d/dnsmasq_list.conf
+
+
 tee /etc/dnsmasq.conf 1>/dev/null <<DNSMASQ
 port=53
 #interface=eth0
@@ -21,15 +39,8 @@ conf-dir=/etc/dnsmasq.d
 server=219.239.26.42
 server=202.106.195.68
 DNSMASQ
-wget http://192.168.168.240/software/linux/raspbian/shadowsocks-libev_2.2.3-1_armhf.deb -O /tmp/shadowsocks.deb
-wget http://192.168.168.240/software/linux/raspbian/shadowvpn_0.1.6-1_armhf.deb -O /tmp/shadowvpn.deb
 
-dpkg -i /tmp/shadowsocks.deb
-#dpkg -i /tmp/shadowvpn.deb
-
-rm -f /tmp/*.deb
-
-tee /etc/haproxy/haproxy.cfg 1> /dev/null << HAPROXY
+tee /etc/haproxy/haproxy.cfg 1> /dev/null <<HAPROXY
 global
         maxconn 24096
         ulimit-n  51200
@@ -52,13 +63,24 @@ listen stats :9090
         mode http
         stats enable
 
-listen  shadowsocks :8388
+listen  mxj :8388
         mode tcp
         option tcplog
         balance leastconn
         server 45.63.124.23 45.63.124.23:8443 check weight 1
         server 45.63.122.145 45.63.122.145:443 check weight 1
         server 108.61.126.222 108.61.126.222:8443 check weight 1
+
+listen  v2ex :8389
+		        mode tcp
+		        option tcplog
+		        balance leastconn
+		        server v2exauto auto.v4.omicronplus.com:4000 check weight 1
+		        server v2exeu1   eu1.v4.omicronplus.com:4000 check weight 1
+		        server v2exeu2   eu2.v4.omicronplus.com:4000 check weight 1
+		        server v2exna1   na1.v4.omicronplus.com:4000 check weight 1
+		        server v2exna2   na2.v4.omicronplus.com:4000 check weight 1
+		       	
 HAPROXY
 tee /etc/shadowsocks-libev/config.json 1> /dev/null<<SS
 {
@@ -71,8 +93,10 @@ tee /etc/shadowsocks-libev/config.json 1> /dev/null<<SS
     "method":"aes-256-cfb"
 }
 SS
+sed -i "s,ss-server,ss-redir,g" /etc/init.d/shadowsocks-libev
+
 tee /usr/local/bin/update_ipset.sh 1>/dev/null <<UIPSET
-ipset save gfwlist|tail -n +2 |awk -F "abcdefg" '{print "ipset "$0}'>/opt/ipset_save
+ipset save gfwlist|tail -n +2 |awk -F "abcdefg" '{print "ipset "\$0}'>/opt/ipset_save
 UIPSET
 tee /usr/local/bin/start.sh 1>/dev/null <<START
 /sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
@@ -86,6 +110,13 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */5 * * * * root /usr/local/bin/update_ipset.sh
 CRRON_UPDATEIPSET
+
+
+tee /etc/default/haproxy 1>/dev/null <<DFAULTPDNS
+ENABLED=0
+DFAULTPDNS
+
+
 tee /etc/default/pdnsd 1>/dev/null <<DFAULTPDNS
 START_DAEMON=yes
 AUTO_MODE=
