@@ -12,6 +12,9 @@ else
 	echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian wheezy main contrib non-free rpi" > /etc/apt/sources.list
 fi
 
+#debconf-show pdnsd
+echo "set pdnsd/conf Manual" | debconf-communicate
+
 apt-get update
 apt-get install dnsmasq haproxy vim curl wget sed openvpn pdnsd ipset -y --force-yes
 
