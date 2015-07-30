@@ -103,6 +103,7 @@ ipset save gfwlist|tail -n +2 |awk -F "abcdefg" '{print "ipset "\$0}'>/opt/ipset
 UIPSET
 tee /usr/local/bin/start.sh 1>/dev/null <<START
 /sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
+echo 1 > /proc/sys/net/ipv4/ip_forward
 ipset -N gfwlist iphash
 cat /opt/ipset_save|bash
 /sbin/iptables -t nat -A PREROUTING  -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 12345
@@ -116,7 +117,7 @@ CRRON_UPDATEIPSET
 
 
 tee /etc/default/haproxy 1>/dev/null <<DFAULTPDNS
-ENABLED=0
+ENABLED=1
 DFAULTPDNS
 
 
