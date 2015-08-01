@@ -30,6 +30,8 @@ fi
 mkdir -p /etc/dnsmasq.d/
 wget http://192.168.168.240/software/linux/raspbian/dnsmasq_list.conf -O /etc/dnsmasq.d/dnsmasq_list.conf
 
+mkdir -p  /var/lib/haproxy
+chown haproxy:haproxy /var/lib/haproxy
 
 tee /etc/dnsmasq.conf 1>/dev/null <<DNSMASQ
 port=53
