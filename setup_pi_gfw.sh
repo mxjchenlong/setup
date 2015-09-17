@@ -41,8 +41,10 @@ no-hosts
 #no-resolv
 log-queries
 conf-dir=/etc/dnsmasq.d
+server=123.59.58.107
+server=114.114.114.114
 server=219.239.26.42
-server=202.106.195.68
+
 DNSMASQ
 
 tee /etc/haproxy/haproxy.cfg 1> /dev/null <<HAPROXY
@@ -98,18 +100,40 @@ tee /etc/shadowsocks-libev/config.json 1> /dev/null<<SS
     "method":"aes-256-cfb"
 }
 SS
+tee /etc/shadowsocks-libev/config_prox.json 1> /dev/null<<SS
+{
+    "server":"127.0.0.1",
+    "server_port":8388,
+    "local_port":12346,
+    "local_address":"0.0.0.0",
+    "password":"r1adev",
+    "timeout":50,
+    "method":"aes-256-cfb"
+}
+SS
 sed -i "s,ss-server,ss-redir,g" /etc/init.d/shadowsocks-libev
 
 tee /usr/local/bin/update_ipset.sh 1>/dev/null <<UIPSET
 ipset save gfwlist|tail -n +2 |awk -F "abcdefg" '{print "ipset "\$0}'>/opt/ipset_save
 UIPSET
 tee /usr/local/bin/start.sh 1>/dev/null <<START
-/sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
+/usr/bin/ss-local -c /etc/shadowsocks-libev/config_prox.json -a root -u -f /var/run/shadowsocks-libev/shadowsocks-libev-server_listen.pid
 echo 1 > /proc/sys/net/ipv4/ip_forward
-ipset -N gfwlist iphash
-cat /opt/ipset_save|bash
-/sbin/iptables -t nat -A PREROUTING  -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 12345
-/sbin/iptables -t nat -A OUTPUT      -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports 12345
+/sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
+
+/sbin/iptables -t nat -A PREROUTING -p tcp -j REDIRECT --to-ports 12345
+/sbin/iptables -t nat -A PREROUTING -p udp -j REDIRECT --to-ports 12345
+
+/sbin/iptables -t nat -I PREROUTING -d 124.193.211.0/24 -j RETURN
+/sbin/iptables -t nat -I PREROUTING -d 45.63.0.0/16 -j RETURN
+/sbin/iptables -t nat -I PREROUTING -d 104.238.0.0/16 -j RETURN
+/sbin/iptables -t nat -I PREROUTING -d 108.61.0.0/16 -j RETURN
+
+/sbin/iptables -t nat -I OUTPUT -d 45.63.0.0/16 -j RETURN
+/sbin/iptables -t nat -I OUTPUT -d 104.238.0.0/16 -j RETURN
+/sbin/iptables -t nat -I OUTPUT -d 108.61.0.0/16 -j RETURN
+
+
 START
 tee /etc/cron.d/update_ipset 1>/dev/null <<CRRON_UPDATEIPSET
 SHELL=/bin/sh
