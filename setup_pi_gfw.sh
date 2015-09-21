@@ -4,7 +4,7 @@ DEBIAN_FRONTEND=noninteractive
 distro=$(uname -a|grep arm)
 if [ "" == "$distro" ]; then
 	echo "23.235.39.133 shadowsocks.org" >> /etc/hosts
-	echo "deb http://shadowsocks.org/debian wheezy main" > /etc/apt/sources.list.d/ss.list
+	echo "deb https://shadowsocks.org/debian wheezy main" > /etc/apt/sources.list.d/ss.list
 	echo "deb http://mirror.bit.edu.cn/ubuntu/ trusty main restricted universe multiverse" > /etc/apt/sources.list
 else
 	mkdir -p /etc/apt/sources.list.d/bk
