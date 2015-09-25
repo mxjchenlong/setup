@@ -72,22 +72,10 @@ listen stats :9090
 
 listen  mxj :8388
         mode tcp
-        option tcplog
         balance leastconn
         server 45.63.124.23 45.63.124.23:8443 check weight 1
         server 45.63.122.145 45.63.122.145:443 check weight 1
         server 108.61.126.222 108.61.126.222:8443 check weight 1
-
-listen  v2ex :8389
-		        mode tcp
-		        option tcplog
-		        balance leastconn
-		        server v2exauto auto.v4.omicronplus.com:4000 check weight 1
-		        server v2exeu1   eu1.v4.omicronplus.com:4000 check weight 1
-		        server v2exeu2   eu2.v4.omicronplus.com:4000 check weight 1
-		        server v2exna1   na1.v4.omicronplus.com:4000 check weight 1
-		        server v2exna2   na2.v4.omicronplus.com:4000 check weight 1
-		       	
 HAPROXY
 tee /etc/shadowsocks-libev/config.json 1> /dev/null<<SS
 {
