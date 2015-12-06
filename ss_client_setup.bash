@@ -41,28 +41,8 @@ listen  mxj :8388
         server hk2.mydreamplus.com 45.120.158.80:8443 check weight 1
         
 HAPROXY
-tee /etc/shadowsocks-libev/config.json 1> /dev/null<<SS
-{
-    "server":"127.0.0.1",
-    "server_port":8388,
-    "local_port":12345,
-    "local_address":"0.0.0.0",
-    "password":"r1adev",
-    "timeout":50,
-    "method":"aes-256-cfb"
-}
-SS
-tee /etc/shadowsocks-libev/config_prox.json 1> /dev/null<<SS
-{
-    "server":"127.0.0.1",
-    "server_port":8388,
-    "local_port":12346,
-    "local_address":"0.0.0.0",
-    "password":"r1adev",
-    "timeout":50,
-    "method":"aes-256-cfb"
-}
-SS
+wget http://192.168.168.110/ss.json -O /etc/shadowsocks-libev/config.json
+
 sed -i "s,ss-server,ss-redir,g" /etc/init.d/shadowsocks-libev
 
 tee /usr/local/bin/start.sh 1>/dev/null <<START
