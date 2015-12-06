@@ -1,11 +1,11 @@
 #!/bin/bash
 
 DEBIAN_FRONTEND=noninteractive
-echo "deb http://shadowsocks.org/ubuntu trusty main" > /etc/apt/sources.list.d/ss.list
 echo "deb http://mirror.bit.edu.cn/ubuntu/ trusty main restricted universe multiverse" > /etc/apt/sources.list
 apt-get update
 apt-get install  haproxy vim curl wget sed   -y --force-yes
-sudo apt-get install  -y --force-yes shadowsocks-libev
+wget http://192.168.168.110/Linux/shadowsocks-libev_2.4.0-1_amd64.deb && dpkg -i shadowsocks-libev_2.4.0-1_amd64.deb 
+
 
 mkdir -p  /var/lib/haproxy
 chown haproxy:haproxy /var/lib/haproxy
