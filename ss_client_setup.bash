@@ -4,7 +4,7 @@ DEBIAN_FRONTEND=noninteractive
 echo "deb http://mirror.bit.edu.cn/ubuntu/ trusty main restricted universe multiverse" > /etc/apt/sources.list
 apt-get update
 apt-get install  haproxy vim curl wget sed   -y --force-yes
-wget http://192.168.168.110/Linux/shadowsocks-libev_2.4.0-1_amd64.deb && dpkg -i shadowsocks-libev_2.4.0-1_amd64.deb 
+wget http://192.168.168.110/Linux/shadowsocks-libev_2.4.0-1_amd64.deb -O shadowsocks-libev_2.4.0-1_amd64.deb && dpkg -i shadowsocks-libev_2.4.0-1_amd64.deb 
 
 
 mkdir -p  /var/lib/haproxy
@@ -39,20 +39,19 @@ listen  mxj :8388
         balance roundrobin
         server hk1.mydreamplus.com 45.120.158.39:8443 check weight 1
         server hk2.mydreamplus.com 45.120.158.80:8443 check weight 1
+        server hk4.mydreamplus.com 45.120.158.147:8443 check weight 1
         
 HAPROXY
-wget http://192.168.168.110/ss.json -O /etc/shadowsocks-libev/config.json
+wget http://192.168.168.110/mdp/autoinstall/ss.json -O /etc/shadowsocks-libev/config.json
 
 sed -i "s,ss-server,ss-redir,g" /etc/init.d/shadowsocks-libev
-
+sed -i "s,Port 22,Port 22\nPort 32200,g" /etc/ssh/sshd_config
 tee /usr/local/bin/start.sh 1>/dev/null <<START
 echo 1 > /proc/sys/net/ipv4/ip_forward
 /sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
 
-/sbin/iptables -t nat -A OUTPUT -p tcp -d 8.8.8.8 --dport 53 -j DNAT --to-destination 127.0.0.1:12345
-/sbin/iptables -t nat -A OUTPUT -p udp -d 8.8.8.8 --dport 53 -j DNAT --to-destination 127.0.0.1:12345
 
-/sbin/iptables -t nat -A PREROUTING -p tcp -j REDIRECT --to-ports 12345
+/sbin/iptables -t nat -A PREROUTING -p tcp -m multiport ! --dports 9090 32200  -j REDIRECT --to-ports 12345
 /sbin/iptables -t nat -A PREROUTING -p udp -j REDIRECT --to-ports 12345
 
 
