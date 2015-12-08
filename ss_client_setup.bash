@@ -51,7 +51,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 /sbin/iptables -t nat -A POSTROUTING  -j MASQUERADE
 
 
-/sbin/iptables -t nat -A PREROUTING -p tcp -m multiport ! --dports 9090 32200  -j REDIRECT --to-ports 12345
+/sbin/iptables -t nat -A PREROUTING -p tcp -m multiport ! --dports 9090,32200  -j REDIRECT --to-ports 12345
 /sbin/iptables -t nat -A PREROUTING -p udp -j REDIRECT --to-ports 12345
 
 
