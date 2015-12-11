@@ -1,7 +1,7 @@
 sudo su
 
 DEBIAN_FRONTEND=noninteractive
-echo "deb http://shadowsocks.org/ubuntu trusty main" > /etc/apt/sources.list.d/ss.list
+echo "deb http://mirror.bit.edu.cn/ubuntu/ trusty main" > /etc/apt/sources.list.d/ss.list
 apt-get update
 apt-get install -y --force-yes shadowsocks-libev apache2
 dd if=/dev/zero of=/var/www/html/100m bs=1024 count=102400
